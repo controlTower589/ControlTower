@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Control Tower{% endblock %}</title>
+
+  <style>
+    body { font-family: Arial, sans-serif; background:#f4f6f9; margin:0; padding:0; }
+
+    .topbar{
+      border-top: 6px solid #1f6feb;
+      background: linear-gradient(90deg, #eff6ff 0%, #ffffff 65%);
+      padding: 18px 24px;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .brand{
+      margin:0;
+      font-size:34px;
+      font-weight:900;
+      letter-spacing:-0.5px;
+      color:#0f172a;
+    }
+
+    .navtabs{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+
+    .navtab{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:10px 18px;
+      border-radius:999px;
+      font-weight:800;
+      text-decoration:none;
+      border: 1px solid #cbd5e1;
+      color:#0f172a;
+      background:#e9eef6;
+      box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
+    }
+    .navtab.active{
+      background:#2563eb;
+      border-color:#2563eb;
+      color:#fff;
+    }
+
+    .container { padding: 24px; max-width: 1200px; margin: 0 auto; }
+
+    /* messages */
+    .flash-wrap{ max-width:1200px; margin: 14px auto 0; padding: 0 24px; }
+    .flash{
+      background:#ecfdf5;
+      border:1px solid #bbf7d0;
+      color:#065f46;
+      padding:10px 12px;
+      border-radius:12px;
+      font-weight:700;
+      font-size:13px;
+      margin-bottom:10px;
+    }
+    .flash.error{
+      background:#fef2f2;
+      border-color:#fecaca;
+      color:#991b1b;
+    }
+  </style>
+
+  {% block extra_style %}{% endblock %}
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="brand">{% block header_title %}Control Tower{% endblock %}</div>
+
+    <div class="navtabs">
+      <a class="navtab {% if active_nav == 'dashboard' %}active{% endif %}" href="/dashboard/">Dashboard</a>
+      <a class="navtab {% if active_nav == 'team' %}active{% endif %}" href="/team/members/?tab=active">Team Members</a>
+      {% block header_actions %}{% endblock %}
+    </div>
+  </div>
+
+  {% if messages %}
+    <div class="flash-wrap">
+      {% for message in messages %}
+        <div class="flash {% if message.tags %}{{ message.tags }}{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

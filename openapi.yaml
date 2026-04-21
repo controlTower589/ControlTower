@@ -1,0 +1,183 @@
+openapi: 3.0.3
+info:
+  title: ChatBVP Control Tower API
+  description: >
+    Event-driven orchestration system that converts operational events
+    into structured AI workflows with Matrix coordination and email notification.
+  version: "1.0.0"
+
+servers:
+  - url: http://localhost:8000
+    description: Local Development Server
+
+tags:
+  - name: Intake
+  - name: Events
+  - name: Workspaces
+  - name: Audit
+
+paths:
+  /:
+    get:
+      tags: [Intake]
+      summary: Render intake request form (HTML)
+      responses:
+        "200":
+          description: HTML form page
+
+  /api/events/:
+    post:
+      tags: [Events]
+      summary: Create new event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event_text]
+              properties:
+                title:
+                  type: string
+                  example: Refund request
+                event_text:
+                  type: string
+                  example: I need a refund for invoice #123.
+      responses:
+        "200":
+          description: Event created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 12
+                  status:
+                    type: string
+                    example: NEW
+
+  /api/events/{event_id}/run/:
+    post:
+      tags: [Events]
+      summary: Trigger AI agent workflow for event
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 12
+      responses:
+        "200":
+          description: Workflow executed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  event_id:
+                    type: integer
+                    example: 12
+                  status:
+                    type: string
+                    example: DONE
+                  structured_output:
+                    type: object
+                    nullable: true
+                  raw_response:
+                    type: string
+                    example: "{\"summary\":\"...\"}"
+
+  /dashboard/:
+    get:
+      tags: [Workspaces]
+      summary: View workspace dashboard (HTML)
+      responses:
+        "200":
+          description: Dashboard page (HTML)
+
+  /dashboard/ws/{workspace_id}/:
+    get:
+      tags: [Workspaces]
+      summary: View workspace details (HTML)
+      parameters:
+        - name: workspace_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 3
+      responses:
+        "200":
+          description: Workspace detail page (HTML)
+
+  /dashboard/ws/{workspace_id}/retry/:
+    post:
+      tags: [Workspaces]
+      summary: Retry workflow for workspace (redirect)
+      parameters:
+        - name: workspace_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 3
+      responses:
+        "302":
+          description: Redirect to workspace detail page
+
+  /dashboard/ws/{workspace_id}/matrix/:
+    post:
+      tags: [Workspaces]
+      summary: Create Matrix room for workspace (redirect)
+      parameters:
+        - name: workspace_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 3
+      responses:
+        "302":
+          description: Redirect to workspace detail page
+
+  /audit/api/{correlation_id}/:
+    get:
+      tags: [Audit]
+      summary: Get audit logs (JSON)
+      parameters:
+        - name: correlation_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 928a0df4-2643-4360-b9a2-d213ee126e00
+      responses:
+        "200":
+          description: Audit logs (JSON)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  correlation_id:
+                    type: string
+                  logs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        created_at:
+                          type: string
+                          example: "2026-02-15T01:42:39Z"
+                        step_name:
+                          type: string
+                          example: EVENT_STATUS
+                        status:
+                          type: string
+                          example: SUCCESS
+                        message:
+                          type: string
+                          example: DONE

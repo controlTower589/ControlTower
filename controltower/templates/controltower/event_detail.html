@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Event {{ event.id }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 30px; background: #f4f6f9; }
+    .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #eee; padding: 10px; text-align: left; }
+    th { background: #fafafa; }
+    a { text-decoration: none; color: #1f6feb; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<p><a href="/control-tower/">&larr; Back to Dashboard</a></p>
+
+<div class="card">
+  <h2>Event {{ event.id }} — {{ event.title }}</h2>
+  <p><b>Status:</b> {{ event.status }}</p>
+  <p><b>Event Text:</b> {{ event.event_text }}</p>
+  <p><b>Created:</b> {{ event.created_at }}</p>
+</div>
+
+{% if structured %}
+  <div class="card">
+    <h3>Latest Agent Output</h3>
+    <p><b>Summary:</b> {{ structured.summary }}</p>
+    <p><b>Category:</b> {{ structured.category }}</p>
+    <p><b>Next Action:</b> {{ structured.next_action }}</p>
+
+    <h4>Steps</h4>
+    <table>
+      <tr><th>Step</th><th>Owner</th><th>Status</th></tr>
+      {% for s in structured.steps %}
+        <tr>
+          <td>{{ s.step }}</td>
+          <td>{{ s.owner }}</td>
+          <td>{{ s.status }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+
+    <h4>Risks</h4>
+    <ul>
+      {% for r in structured.risks %}
+        <li>{{ r }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% else %}
+  <div class="card">
+    <p><em>No agent run yet for this event.</em></p>
+  </div>
+{% endif %}
+
+<div class="card">
+  <h3>Run History</h3>
+  <table>
+    <tr><th>Time</th><th>Model</th><th>Success</th><th>Error</th></tr>
+    {% for run in runs %}
+      <tr>
+        <td>{{ run.created_at }}</td>
+        <td>{{ run.model_name }}</td>
+        <td>{{ run.success }}</td>
+        <td>{{ run.error }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+</div>
+
+</body>
+</html>
