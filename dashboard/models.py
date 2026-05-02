@@ -26,6 +26,22 @@ class Workspace(models.Model):
     requester_email = models.EmailField(blank=True, default="")
     intake_id = models.IntegerField(blank=True, null=True)
 
+    #  NEW CODE START (Owner fields)
+
+    owner_name = models.CharField(max_length=255, blank=True, default="None")
+
+
+    owner_member = models.ForeignKey(
+        "team.TeamMember",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+
+    # NEW CODE END
+
+
+
     structured_output = models.JSONField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)

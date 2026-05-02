@@ -11,5 +11,13 @@ class TeamMember(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+
+
+    #  NEW CODE START
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}".strip()
+    # NEW CODE END
+
     def __str__(self):
         return f"{self.first_name} {self.last_name} <{self.email}>"

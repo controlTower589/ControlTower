@@ -21,8 +21,15 @@ from django.urls import path, include
 
 from controltower.swagger_views import swagger_ui, openapi_yaml
 
+
+
 urlpatterns = [
+
+
+
     path("admin/", admin.site.urls),
+    #path("", include("your_existing_apps")),  # keep your existing includes
+    #path("admin/", admin.site.urls),
 
     # Existing apps
     path("", include("intake.urls")),

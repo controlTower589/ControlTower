@@ -197,6 +197,8 @@ def process_event(self, event_id):
                 "requester_email": payload.get("email") or "",
                 "webui_session_id": f"ollama-session-{payload.get('intake_id') or event.id}",
                 "structured_output": None,
+                "owner_name": "None",
+                "owner_member": None,
             },
         )
 
@@ -213,6 +215,17 @@ def process_event(self, event_id):
                 ws.webui_session_id = f"ollama-session-{ws.intake_id or event.id}"
 
         ws.next_actions = _compute_next_actions(ws)
+        #  NEW CODE START
+        if created:
+            active_owner = _pick_random_active_member()
+
+            if active_owner:
+                ws.owner_member = active_owner
+                ws.owner_name = f"{active_owner.first_name} {active_owner.last_name}".strip()
+            else:
+                ws.owner_member = None
+                ws.owner_name = "None"
+        #  NEW CODE END
         ws.save(
             update_fields=[
                 "event_type",
@@ -225,6 +238,8 @@ def process_event(self, event_id):
                 "requester_email",
                 "webui_session_id",
                 "updated_at",
+                "owner_member",
+                "owner_name",
             ]
         )
         log_step(cid, "WORKSPACE_CREATED", "SUCCESS", f"workspace_id={ws.id} created={created}")
@@ -421,9 +436,10 @@ def process_event(self, event_id):
         raise
 
 
+# NEW CODE START
 def _pick_random_active_member():
-    qs = TeamMember.objects.filter(is_active=True).values("first_name", "last_name", "email")
-    members = list(qs)
+    members = list(TeamMember.objects.filter(is_active=True))
     if not members:
         return None
     return random.choice(members)
+# NEW CODE END

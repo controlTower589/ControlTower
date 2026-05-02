@@ -7,7 +7,11 @@ from .views import (
     create_matrix_room,
 )
 
+
+
 urlpatterns = [
+
+
     path("", dashboard_home, name="dashboard_home"),
 
     path("ws/<int:workspace_id>/", workspace_detail, name="workspace_detail"),
