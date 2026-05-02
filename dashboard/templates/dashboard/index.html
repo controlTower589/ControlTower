@@ -11,15 +11,17 @@
     padding: 18px;
   }
 
+  /* ✅ SMALL RIGHT SEARCH */
   .top-search{
     display:flex;
     gap:10px;
     margin-bottom:16px;
     align-items:center;
+    justify-content:flex-end;
   }
 
   .top-search input{
-    flex:1;
+    width:320px;
     padding:10px 12px;
     border-radius:10px;
     border:1px solid #e5e7eb;
@@ -45,6 +47,7 @@
     padding: 12px 10px;
     font-size: 13px;
     color:#111827;
+    vertical-align: middle;
   }
 
   th{
@@ -66,13 +69,17 @@
     font-size:12px;
     border:none;
     cursor:pointer;
+    white-space: nowrap;
   }
 
+  /* ✅ FIXED STATUS BADGES */
   .badge{
+    display:inline-block;
     padding:4px 10px;
     border-radius:999px;
     font-weight:700;
     font-size:12px;
+    white-space: nowrap;
   }
 
   .badge.READY { background:#dcfce7; color:#166534; }
@@ -81,6 +88,26 @@
   .badge.DONE { background:#e0f2fe; color:#075985; }
 
   .hint { color:#64748b; font-size:12px; }
+
+  /* ✅ ORIGINAL NEXT ACTION STYLE */
+  .ok-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 10px;
+    border-radius:999px;
+    background:#ecfdf5;
+    color:#065f46;
+    font-weight:700;
+    font-size:12px;
+    line-height:1;
+  }
+
+  .ok-icon{
+    width:16px;
+    height:16px;
+    flex:0 0 auto;
+  }
 
   .pagination{
     display:flex;
@@ -94,15 +121,14 @@
 {% block content %}
 <div class="card">
 
-  <!-- ✅ SINGLE GLOBAL SEARCH -->
+  <!-- ✅ ONLY CHANGE: SEARCH BAR -->
   <form method="get" class="top-search">
     <input
       type="text"
       name="search"
-      placeholder="Search anything (name, email, status, owner...)"
+      placeholder="Search..."
       value="{{ search }}"
     />
-
     <button type="submit" class="btn">Search</button>
     <a href="/dashboard/" class="btn">Clear</a>
   </form>
@@ -126,14 +152,37 @@
       {% for ws in workspaces %}
       <tr>
         <td>{{ ws.event_type }}</td>
-        <td><span class="badge {{ ws.status }}">{{ ws.status }}</span></td>
+
+        <!-- ✅ STATUS FIXED -->
+        <td>
+          <span class="badge {{ ws.status }}">
+            {{ ws.status }}
+          </span>
+        </td>
+
         <td>{{ ws.requester_first_name }}</td>
         <td>{{ ws.requester_last_name }}</td>
         <td>{{ ws.requester_email }}</td>
 
         <td>{{ ws.owner_name|default:"None" }}</td>
 
-        <td>{{ ws.next_actions }}</td>
+        <!-- ✅ ORIGINAL NEXT ACTIONS -->
+        <td>
+          {% if ws.next_actions == "✅ No pending actions" or "No pending actions" in ws.next_actions %}
+            <span class="ok-pill">
+              <svg class="ok-icon" viewBox="0 0 24 24" fill="none">
+                <path d="M9.2 12.7l1.9 1.9 4.7-4.7"
+                      stroke="#059669" stroke-width="2.5"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 22c5.5 0 10-4.5 10-10S17.5 2 12 2 2 6.5 2 12s4.5 10 10 10Z"
+                      stroke="#059669" stroke-width="2"/>
+              </svg>
+              No pending actions
+            </span>
+          {% else %}
+            {{ ws.next_actions }}
+          {% endif %}
+        </td>
 
         <td>
           {% if ws.matrix_room_id %}
@@ -160,7 +209,9 @@
       <a class="btn" href="?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">Prev</a>
     {% endif %}
 
-    <span class="hint">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    <span class="hint">
+      Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+    </span>
 
     {% if page_obj.has_next %}
       <a class="btn" href="?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">Next</a>
