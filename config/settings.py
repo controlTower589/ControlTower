@@ -34,7 +34,7 @@ SECRET_KEY = "django-insecure-#m9)tf@)oeg$6)ib&hstgownpf5+$8n=9@=4mz48!7&&@q0%+$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -98,9 +98,9 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "controltower_db",
-        "USER": "controltower_user",
-        "PASSWORD": "Aa9886603727$",
+        "NAME": "controltower",
+        "USER": "ctuser",
+        "PASSWORD": "password123",
         "HOST": "127.0.0.1",
         "PORT": "5432",
 

@@ -158,9 +158,20 @@ def workspace_detail(request, workspace_id: int):
         user_request = (p.get("message") or p.get("chat") or p.get("text") or "").strip()
 
     # Matrix URL
+   # matrix_url = ""
+   # if ws.matrix_room_id and getattr(settings, "MATRIX_WEB_URL", ""):
+    #    matrix_url = f"{settings.MATRIX_WEB_URL}/#/room/{ws.matrix_room_id}"
+
     matrix_url = ""
-    if ws.matrix_room_id and getattr(settings, "MATRIX_WEB_URL", ""):
-        matrix_url = f"{settings.MATRIX_WEB_URL}/#/room/{ws.matrix_room_id}"
+
+    if ws.matrix_room_id:
+     base_url = getattr(settings, "MATRIX_WEB_URL", "")
+
+     if not base_url:
+        host = request.get_host().split(":")[0]
+        base_url = f"http://{host}:8008"
+
+     matrix_url = f"{base_url}/#/room/{ws.matrix_room_id}"
 
     structured = _safe_structured_output(ws)
     steps = structured.get("steps") or []
