@@ -22,15 +22,15 @@ from team.models import TeamMember
 
 
 def _compute_next_actions(ws: Workspace) -> str:
-    """Next actions depend only on Matrix room now."""
+
     actions = []
     if not ws.matrix_room_id:
         actions.append("Create Matrix room")
-    return "; ".join(actions) if actions else "✅ No pending actions"
+    return "; ".join(actions) if actions else " No pending actions"
 
 
 def _build_event_text(event: OperationalEvent, payload: dict) -> str:
-    """Stable text block for model -> JSON."""
+
     req_type = payload.get("request_type", event.event_type) or "REQUEST"
     first = payload.get("first_name") or ""
     last = payload.get("last_name") or ""
@@ -64,7 +64,7 @@ def _format_workflow_message(summary: str, next_action: str, steps: list, risks:
 
 
 def _looks_like_simple_question(user_message: str) -> bool:
-    """Simple heuristic to avoid escalation for basic Q&A."""
+
     if not user_message:
         return False
 
@@ -90,13 +90,13 @@ def _answer_has_ellipsis(s: str) -> bool:
 
 
 def _last_numbered_index(text: str) -> int:
-    # highest "N." found in the text
+
     nums = re.findall(r"\b(\d+)\.\s", text)
     return int(nums[-1]) if nums else 0
 
 
 def _format_answer_items(answer_to_user: str, answer_items: list) -> str:
-    """If answer_items exists, format them as 1..N lines."""
+
     if answer_items and isinstance(answer_items, list):
         lines = []
         for i, item in enumerate(answer_items, start=1):
@@ -109,7 +109,7 @@ def _format_answer_items(answer_to_user: str, answer_items: list) -> str:
 
 
 def _strip_trailing_ellipsis(text: str) -> str:
-    # remove trailing "...", "and so on", "etc"
+
     text = re.sub(r"\.\.\.\s*$", "", text).strip()
     text = re.sub(r"(and so on|etc)\.?$", "", text, flags=re.IGNORECASE).strip()
     return text
@@ -127,16 +127,16 @@ def _pretty_matrix_message(structured: dict, fallback_text: str) -> str:
     out = []
 
     if summary:
-        out.append("📌 Summary")
+        out.append(" Summary")
         out.append(summary)
         out.append("")
 
     if next_action:
-        out.append("⚡ Next Action")
+        out.append(" Next Action")
         out.append(next_action)
         out.append("")
 
-    out.append("🛠 Steps")
+    out.append(" Steps")
     if steps:
         for i, s in enumerate(steps, start=1):
             step = s.get("step", "")
@@ -147,7 +147,7 @@ def _pretty_matrix_message(structured: dict, fallback_text: str) -> str:
         out.append("- (no steps provided)")
 
     out.append("")
-    out.append("⚠ Risks")
+    out.append(" Risks")
 
     if risks:
         for r in risks:
@@ -183,7 +183,7 @@ def process_event(self, event_id):
         event.save(update_fields=["status"])
         log_step(cid, "EVENT_STATUS", "SUCCESS", "PROCESSING")
 
-        # Create or fetch workspace
+
         ws, created = Workspace.objects.get_or_create(
             correlation_id=cid,
             defaults={
@@ -202,7 +202,7 @@ def process_event(self, event_id):
             },
         )
 
-        # If workspace already existed (retry), refresh fields
+
         if not created:
             ws.event_type = event.event_type
             ws.status = "IN_PROGRESS"
@@ -215,7 +215,7 @@ def process_event(self, event_id):
                 ws.webui_session_id = f"ollama-session-{ws.intake_id or event.id}"
 
         ws.next_actions = _compute_next_actions(ws)
-        #  NEW CODE START
+
         if created:
             active_owner = _pick_random_active_member()
 
@@ -225,7 +225,7 @@ def process_event(self, event_id):
             else:
                 ws.owner_member = None
                 ws.owner_name = "None"
-        #  NEW CODE END
+
         ws.save(
             update_fields=[
                 "event_type",
@@ -244,7 +244,7 @@ def process_event(self, event_id):
         )
         log_step(cid, "WORKSPACE_CREATED", "SUCCESS", f"workspace_id={ws.id} created={created}")
 
-        # Step 1: Matrix room create
+
         if not ws.matrix_room_id:
             invitees = getattr(settings, "MATRIX_DEFAULT_INVITEES", []) or []
             room_id = create_room(f"ct-{cid}", invitees=invitees)
@@ -253,15 +253,15 @@ def process_event(self, event_id):
             ws.save(update_fields=["matrix_room_id", "next_actions", "updated_at"])
             log_step(cid, "MATRIX_ROOM_CREATE", "SUCCESS", room_id)
 
-            # Optional: post a “workflow started” message
+
             try:
-                post_message(room_id, "✅ Workflow started. AI response will be posted here shortly.")
+                post_message(room_id, " Workflow started. AI response will be posted here shortly.")
             except Exception as e:
                 log_step(cid, "MATRIX_POST_START", "FAILED", str(e))
         else:
             room_id = ws.matrix_room_id
 
-        # Step 2: AI Session marker
+
         if ws.webui_session_id and ws.webui_session_id.startswith("ollama-session-"):
             log_step(cid, "AI_SESSION_CREATE", "SUCCESS", ws.webui_session_id)
         else:
@@ -269,7 +269,7 @@ def process_event(self, event_id):
             ws.save(update_fields=["webui_session_id", "updated_at"])
             log_step(cid, "AI_SESSION_CREATE", "SUCCESS", ws.webui_session_id)
 
-        # Step 3: Generate AI response using Ollama (local)
+
         user_message = (payload.get("message") or "").strip()
         event_text = _build_event_text(event, payload)
         prompt = force_json_prompt(event_text)
@@ -295,7 +295,7 @@ def process_event(self, event_id):
             if direct_answer_text or is_none_action or _looks_like_simple_question(user_message):
                 ai_response = direct_answer_text or summary or "Answered."
                 ws.latest_summary = summary or "Answered directly"
-                ws.next_actions = "✅ No pending actions"
+                ws.next_actions = " No pending actions"
 
                 if _answer_has_ellipsis(ai_response):
                     ai_response = _strip_trailing_ellipsis(ai_response)
@@ -336,7 +336,7 @@ def process_event(self, event_id):
             else:
                 ai_response = _format_workflow_message(summary, next_action, steps, risks)
                 ws.latest_summary = summary or "Workflow created"
-                ws.next_actions = next_action or "✅ No pending actions"
+                ws.next_actions = next_action or "No pending actions"
 
             ws.structured_output = structured
             ws.save(update_fields=["structured_output", "latest_summary", "next_actions", "updated_at"])
@@ -347,24 +347,24 @@ def process_event(self, event_id):
                 "We received your request, but the AI service (local Ollama) failed to generate a response. "
                 "A team member will follow up shortly."
             )
-            ws.status = "AI_FAILED"  # ✅ IMPORTANT
+            ws.status = "AI_FAILED"
             ws.structured_output = None
             ws.latest_summary = "AI failed (Ollama). Response queued for human."
             ws.next_actions = "Retry later or investigate audit logs"
             ws.save(update_fields=["status", "structured_output", "latest_summary", "next_actions", "updated_at"])
             log_step(cid, "AI_RESPONSE_GENERATED", "FAILED", repr(ai_err))
 
-        # Post AI response to Matrix
+
         matrix_text = _pretty_matrix_message(structured or {}, ai_response)
         try:
             post_message(room_id, matrix_text)
         except Exception as e:
             log_step(cid, "MATRIX_POST_AI", "FAILED", str(e))
 
-        # Step 4: Send Email to requester (EXACT same ai_response but with header/footer + CC)
+
         to_email = (ws.requester_email or payload.get("email") or "").strip()
 
-        # ✅ HARD-CODE CC EMAILS HERE (PUT YOUR REAL EMAILS)
+        #later we can change this based on requirement
         CC_EMAILS = [
             "brahmendra.jayaraju67@gmail.com",
             "uscan.regions@gmail.com",
@@ -389,7 +389,7 @@ def process_event(self, event_id):
                 msg.send(fail_silently=False)
                 log_step(cid, "EMAIL_SENT", "SUCCESS", f"to={to_email} cc={','.join(CC_EMAILS)}")
 
-                # ✅ PART E — Post email status into Matrix
+
                 try:
                     post_message(room_id, f"📧 Email successfully sent to {to_email} (CC: {', '.join(CC_EMAILS)})")
                 except Exception as e:
@@ -404,13 +404,13 @@ def process_event(self, event_id):
         event.save(update_fields=["status"])
         log_step(cid, "EVENT_STATUS", "SUCCESS", "DONE")
 
-        # ✅ Final workspace status should depend on result
+
         if ws.status == "AI_FAILED":
             final_status = "AI_FAILED"
-        elif (ws.next_actions or "").strip() != "✅ No pending actions":
-            final_status = "READY"  # needs some manual action (like matrix room)
+        elif (ws.next_actions or "").strip() != " No pending actions":
+            final_status = "READY"
         else:
-            final_status = "DONE"  # workflow completed
+            final_status = "DONE"
 
         ws.status = final_status
         ws.save(update_fields=["status", "updated_at"])
@@ -436,10 +436,10 @@ def process_event(self, event_id):
         raise
 
 
-# NEW CODE START
+
 def _pick_random_active_member():
     members = list(TeamMember.objects.filter(is_active=True))
     if not members:
         return None
     return random.choice(members)
-# NEW CODE END
+

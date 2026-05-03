@@ -1,5 +1,4 @@
 from django.urls import path
-from .views import audit_for_correlation
 from .views import audit_for_correlation, audit_for_correlation_api
 
 urlpatterns = [

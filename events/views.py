@@ -1,8 +1,8 @@
-from django.shortcuts import render
 
-# Create your views here.
+
+
 from django.shortcuts import render
-from .forms import IntakeRequestForm
+from intake.forms import IntakeRequestForm
 from events.services import create_event
 
 def create_request(request):

@@ -1,9 +1,8 @@
+
+
+
 from django.shortcuts import render
 
-# Create your views here.
-from django.shortcuts import render
-from .models import AuditLog
-from django.http import JsonResponse
 
 def audit_for_correlation(request, correlation_id: str):
     logs = AuditLog.objects.filter(correlation_id=correlation_id).order_by("created_at")

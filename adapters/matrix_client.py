@@ -26,7 +26,7 @@ def create_room(name: str, invitees: list[str] | None = None) -> str:
         "is_direct": False,
     }
 
-    # 🔥 DEBUG
+
     print("AUTO INVITE FLAG:", getattr(settings, "AUTO_INVITE_ALL_USERS", False))
 
     if getattr(settings, "AUTO_INVITE_ALL_USERS", False):
@@ -49,7 +49,7 @@ def create_room(name: str, invitees: list[str] | None = None) -> str:
             if "controltower-bot" in user_id:
                 continue
 
-            # TEMP: invite ALL users (no filter)
+
             auto_invite.append(user_id)
 
         print("AUTO INVITE LIST:", auto_invite)
@@ -69,7 +69,7 @@ def create_room(name: str, invitees: list[str] | None = None) -> str:
 
 def invite_user(room_id: str, user_id: str) -> None:
     if not _enabled():
-        raise MatrixError("Matrix not configured.")
+        raise MatrixError("Matrix not configured")
 
     url = settings.MATRIX_HOMESERVER_URL.rstrip("/") + f"/_matrix/client/v3/rooms/{room_id}/invite"
     payload = {"user_id": user_id}

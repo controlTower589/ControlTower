@@ -11,7 +11,7 @@
     padding: 18px;
   }
 
-  /* ✅ SMALL RIGHT SEARCH */
+
   .top-search{
     display:flex;
     gap:10px;
@@ -72,7 +72,7 @@
     white-space: nowrap;
   }
 
-  /* ✅ FIXED STATUS BADGES */
+
   .badge{
     display:inline-block;
     padding:4px 10px;
@@ -89,7 +89,7 @@
 
   .hint { color:#64748b; font-size:12px; }
 
-  /* ✅ ORIGINAL NEXT ACTION STYLE */
+
   .ok-pill{
     display:inline-flex;
     align-items:center;
@@ -121,7 +121,7 @@
 {% block content %}
 <div class="card">
 
-  <!-- ✅ ONLY CHANGE: SEARCH BAR -->
+
   <form method="get" class="top-search">
     <input
       type="text"
@@ -153,7 +153,7 @@
       <tr>
         <td>{{ ws.event_type }}</td>
 
-        <!-- ✅ STATUS FIXED -->
+
         <td>
           <span class="badge {{ ws.status }}">
             {{ ws.status }}
@@ -166,9 +166,9 @@
 
         <td>{{ ws.owner_name|default:"None" }}</td>
 
-        <!-- ✅ ORIGINAL NEXT ACTIONS -->
+
         <td>
-          {% if ws.next_actions == "✅ No pending actions" or "No pending actions" in ws.next_actions %}
+          {% if ws.next_actions == "No pending actions" or "No pending actions" in ws.next_actions %}
             <span class="ok-pill">
               <svg class="ok-icon" viewBox="0 0 24 24" fill="none">
                 <path d="M9.2 12.7l1.9 1.9 4.7-4.7"

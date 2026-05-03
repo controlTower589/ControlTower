@@ -1,6 +1,6 @@
 
 
-# Create your views here.
+
 from django.shortcuts import render
 from .forms import IntakeRequestForm
 from events.services import create_event
@@ -24,7 +24,7 @@ def create_request(request):
 
             event = create_event(obj.request_type, payload)
 
-            # Trigger background workflow
+
             process_event.delay(event.id)
 
             return render(request, "intake/success.html", {"obj": obj, "event": event})

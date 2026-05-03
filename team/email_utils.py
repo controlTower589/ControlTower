@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.mail import EmailMessage
 
 
-CC_EMAIL = "tower2372@gmail.com"  # ✅ keep hardcoded exactly
+CC_EMAIL = "tower2372@gmail.com"  # later we will, change once garry gives valid emails
 
 
 def _subject_for(action: str) -> str:
@@ -83,10 +83,7 @@ def send_team_member_email(
     last_name: str,
     to_email: str,
 ) -> None:
-    """
-    Sends email TO the member + CC tower2372@gmail.com
-    Raises error if SMTP fails.
-    """
+
     to_email = (to_email or "").strip()
     if not to_email:
         return

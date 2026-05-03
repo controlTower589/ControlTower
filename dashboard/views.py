@@ -1,5 +1,5 @@
 import json
-from django.db import models
+
 from django.conf import settings
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -10,8 +10,8 @@ from events.models import OperationalEvent
 from audit.services import log_step
 from .models import Workspace
 from workflows.tasks import process_event
-
 from adapters.matrix_client import create_room as matrix_create_room
+
 
 def dashboard_home(request):
     qs = Workspace.objects.order_by("-updated_at")
@@ -39,13 +39,17 @@ def dashboard_home(request):
         querydict.pop("page")
     querystring = querydict.urlencode()
 
-    return render(request, "dashboard/index.html", {
-        "page_obj": page_obj,
-        "workspaces": page_obj,
-        "active_nav": "dashboard",
-        "search": search,
-        "querystring": querystring,
-    })
+    return render(
+        request,
+        "dashboard/index.html",
+        {
+            "page_obj": page_obj,
+            "workspaces": page_obj,
+            "active_nav": "dashboard",
+            "search": search,
+            "querystring": querystring,
+        },
+    )
 
 
 @require_POST
@@ -57,19 +61,29 @@ def retry_workflow(request, workspace_id: int):
     ).order_by("-id").first()
 
     if not event:
-        log_step(str(ws.correlation_id), "RETRY_REQUESTED", "FAILED", "No OperationalEvent found")
+        log_step(
+            str(ws.correlation_id),
+            "RETRY_REQUESTED",
+            "FAILED",
+            "No OperationalEvent found",
+        )
         ws.latest_summary = "Retry requested, but no event found. Check audit logs."
         ws.next_actions = "Investigate audit logs"
         ws.save(update_fields=["latest_summary", "next_actions", "updated_at"])
         return redirect("workspace_detail", workspace_id=ws.id)
 
-    # ✅ Immediately show it is being worked on
     ws.status = "IN_PROGRESS"
     ws.latest_summary = "Retry requested. Workflow re-queued."
     ws.next_actions = "Waiting for workflow results"
     ws.save(update_fields=["status", "latest_summary", "next_actions", "updated_at"])
 
-    log_step(str(ws.correlation_id), "RETRY_REQUESTED", "SUCCESS", f"workspace_id={ws.id}, event_id={event.id}")
+    log_step(
+        str(ws.correlation_id),
+        "RETRY_REQUESTED",
+        "SUCCESS",
+        f"workspace_id={ws.id}, event_id={event.id}",
+    )
+
     process_event.delay(event.id)
 
     return redirect("workspace_detail", workspace_id=ws.id)
@@ -77,13 +91,16 @@ def retry_workflow(request, workspace_id: int):
 
 def _safe_structured_output(ws: Workspace) -> dict:
     structured = ws.structured_output or {}
+
     if isinstance(structured, str):
         try:
             structured = json.loads(structured)
         except Exception:
             structured = {}
+
     if not isinstance(structured, dict):
         structured = {}
+
     return structured
 
 
@@ -92,11 +109,13 @@ def _format_answer(answer_to_user: str, answer_items: list) -> str:
 
     if isinstance(answer_items, list) and len(answer_items) > 0:
         lines = []
+
         for i, item in enumerate(answer_items, start=1):
             lines.append(f"{i}. {item}")
 
         if answer_to_user:
             return (answer_to_user + "\n\n" + "\n".join(lines)).strip()
+
         return "\n".join(lines).strip()
 
     return answer_to_user
@@ -109,37 +128,35 @@ def workspace_detail(request, workspace_id: int):
         correlation_id=ws.correlation_id
     ).order_by("-id").first()
 
-    # ✅ Get the exact user typed text
     user_request = ""
-    if event and isinstance(getattr(event, "payload", None), dict):
-        p = event.payload
-        # try common keys
-        user_request = (p.get("message") or p.get("chat") or p.get("text") or "").strip()
 
-    # Matrix URL
-   # matrix_url = ""
-   # if ws.matrix_room_id and getattr(settings, "MATRIX_WEB_URL", ""):
-    #    matrix_url = f"{settings.MATRIX_WEB_URL}/#/room/{ws.matrix_room_id}"
+    if event and isinstance(getattr(event, "payload", None), dict):
+        payload = event.payload
+        user_request = (
+            payload.get("message")
+            or payload.get("chat")
+            or payload.get("text")
+            or ""
+        ).strip()
 
     matrix_url = ""
 
     if ws.matrix_room_id:
-     base_url = getattr(settings, "MATRIX_WEB_URL", "")
-
-     if not base_url:
-        host = request.get_host().split(":")[0]
-        base_url = f"http://{host}:8008"
-
-     matrix_url = f"{base_url}/#/room/{ws.matrix_room_id}"
+        base_url = getattr(settings, "MATRIX_WEB_URL", "") or "http://localhost:8080"
+        base_url = base_url.rstrip("/")
+        matrix_url = f"{base_url}/#/room/{ws.matrix_room_id}"
 
     structured = _safe_structured_output(ws)
+
     steps = structured.get("steps") or []
     risks = structured.get("risks") or []
+
     answer_to_user_raw = structured.get("answer_to_user") or ""
     answer_items = structured.get("answer_items") or []
     answer_to_user = _format_answer(answer_to_user_raw, answer_items)
 
     summary_text = (ws.latest_summary or "").lower()
+
     ai_failed = (
         ws.status in {"FAILED", "AI_FAILED"}
         or "ai failed" in summary_text
@@ -156,22 +173,22 @@ def workspace_detail(request, workspace_id: int):
             "steps": steps,
             "risks": risks,
             "ai_failed": ai_failed,
-
-            # ✅ only this (not full payload)
             "user_request": user_request,
             "active_nav": "dashboard",
-
-
-
-        }
+        },
     )
-
 
 
 @require_POST
 def create_matrix_room(request, workspace_id: int):
     ws = get_object_or_404(Workspace, id=workspace_id)
-    log_step(str(ws.correlation_id), "MATRIX_ROOM_CREATE", "STARTED", f"workspace_id={ws.id}")
+
+    log_step(
+        str(ws.correlation_id),
+        "MATRIX_ROOM_CREATE",
+        "STARTED",
+        f"workspace_id={ws.id}",
+    )
 
     try:
         created_now = False
@@ -180,18 +197,38 @@ def create_matrix_room(request, workspace_id: int):
             ws.matrix_room_id = matrix_create_room(f"ct-{ws.correlation_id}")
             created_now = True
 
-        ws.next_actions = "✅ No pending actions" if ws.matrix_room_id else "Create Matrix room"
+        ws.next_actions = "No pending actions" if ws.matrix_room_id else "Create Matrix room"
+
         if created_now:
             ws.latest_summary = "Matrix room created"
 
-        ws.save(update_fields=["matrix_room_id", "next_actions", "latest_summary", "updated_at"])
-        log_step(str(ws.correlation_id), "MATRIX_ROOM_CREATE", "SUCCESS", f"room_id={ws.matrix_room_id}")
+        ws.save(
+            update_fields=[
+                "matrix_room_id",
+                "next_actions",
+                "latest_summary",
+                "updated_at",
+            ]
+        )
+
+        log_step(
+            str(ws.correlation_id),
+            "MATRIX_ROOM_CREATE",
+            "SUCCESS",
+            f"room_id={ws.matrix_room_id}",
+        )
 
     except Exception as e:
         ws.status = "FAILED"
         ws.latest_summary = "Matrix room creation failed"
         ws.next_actions = "Retry later or investigate audit logs"
         ws.save(update_fields=["status", "latest_summary", "next_actions", "updated_at"])
-        log_step(str(ws.correlation_id), "MATRIX_ROOM_CREATE", "FAILED", str(e))
+
+        log_step(
+            str(ws.correlation_id),
+            "MATRIX_ROOM_CREATE",
+            "FAILED",
+            str(e),
+        )
 
     return redirect("workspace_detail", workspace_id=ws.id)

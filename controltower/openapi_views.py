@@ -5,7 +5,7 @@ from django.http import HttpResponse, HttpResponseNotFound
 
 
 def openapi_yaml(request):
-    # openapi.yaml is in the same level as manage.py
+
     spec_path = Path(settings.BASE_DIR) / "openapi.yaml"
 
     if not spec_path.exists():

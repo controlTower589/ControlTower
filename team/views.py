@@ -15,9 +15,7 @@ def _clean_tab(tab: str) -> str:
 
 
 def _list_url(request, tab: str) -> str:
-    """
-    Preserve filters + page while going back.
-    """
+
     q = {
         "tab": tab,
         "first_name": (request.GET.get("first_name") or "").strip(),
@@ -73,7 +71,7 @@ def team_member_create(request):
         if form.is_valid():
             member = form.save()
 
-            # email (do not block UI)
+
             try:
                 send_team_member_email("ADDED", member.first_name, member.last_name, member.email)
             except Exception as e:
@@ -136,7 +134,7 @@ def team_member_toggle(request, member_id: int):
     member.is_active = not member.is_active
     member.save(update_fields=["is_active", "updated_at"])
 
-    # email action based on resulting state
+
     action = "ENABLED" if member.is_active else "DISABLED"
     try:
         send_team_member_email(action, member.first_name, member.last_name, member.email)
@@ -154,7 +152,7 @@ def team_member_delete(request, member_id: int):
 
     member = get_object_or_404(TeamMember, id=member_id)
 
-    # email before delete (after delete you lose fields)
+
     try:
         send_team_member_email("DELETED", member.first_name, member.last_name, member.email)
     except Exception as e:
